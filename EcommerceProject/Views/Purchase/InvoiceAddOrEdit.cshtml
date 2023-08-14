@@ -1,0 +1,296 @@
+﻿@model   EcommerceProject.Dtos.ViewModels.InvoiceViewModel 
+
+@{
+    ViewData["Title"] = "InvoiceAddOrEdit";
+}
+
+<h1>InvoiceAddOrEdit</h1>
+ 
+<div class="row">
+    <div class="col-md-4">
+
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <input type="hidden" asp-for="Id" id="Id"   class="form-control">
+
+        <div class="col-md-6">
+                <label class="control-label">Code</label>
+            <input value="@(Model.Code>0? Model.Code: "")" id="Code" type="number"  class="form-control" />
+            <span id="Codevalidation" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="Date" class="control-label"></label>
+                <input asp-for="Date" id="Date" class="form-control" value=@DateTime.Today.ToString("yyyy-MM-dd") />
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="customerid" class="control-label">customer</label>
+                    <select asp-for="customerid"  id="customerid" asp-items="new SelectList((@ViewBag.Customers as List<Customer>) ,nameof(Customer.Id),
+                   nameof(Customer.Name))" class=" form-control custom-select mr-sm-2">
+                    <option value="0">Please Select</option>
+                </select>
+                <span id="Customervalidation"   class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+</div>
+    <table style="width:80%" id="tblITems" class="table" cellpadding="0" cellspacing="0">
+        <thead>
+            <tr>
+                <th style="width:150px">Name</th>
+                <th style="width:150px">Price</th>
+                <th style="width:150px">Quantity</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model.ItemViewModels )
+            {
+                <tr>
+                <td>@item.Name</td>
+                <td>@item.Price</td>
+                <td>@item.Quantity</td>
+                <td><input type="button" value="Remove" class="btn btn-danger" onclick="Remove(this)" /></td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+            <td><input type="text" class="form-control" id="txtName" /></td>
+            <td><input type="number" class="form-control" id="txtPrice" />
+            </td>
+            <td><input type="number" class="form-control" id="txtQuantity" />
+            </td>
+            <td><input type="button" class="btn btn-primary" id="btnAdd" value="Add"/></td>      
+            </tr>
+        </tfoot>
+     
+    </table>
+    <div style="width:80%">
+        <div style="text-align:end">
+        Total <input type="button"  style="cursor:auto" id="totalAmount" value="@Model.Amount" />
+        </div>  
+    </div>
+     
+    <span  id="tablevalidation" class="text-danger"></span>
+    <br/>
+<input type="submit" id="btnSave" value="Save All" class="btn btn-success" />
+ 
+
+<br />
+<br />
+<br />
+<br />
+<div style="width:80%">
+    <div style="text-align:end">
+        <a asp-action="Index" class="btn btn-secondary">Back to Invoices</a>
+    </div>
+</div>
+
+
+
+@section scripts{
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script type="text/javascript">
+        var txtName = $("#txtName");
+        var txtPrice = $("#txtPrice");
+        var txtQuantity = $("#txtQuantity");
+        var tablevalidation = $("#tablevalidation");
+        var totalAmount = $("#totalAmount");
+      
+        $("body").on("click", "#btnAdd", function () {
+
+            var isproceed = true;
+
+            // validation
+
+            if (txtName.val() == '' || txtName.val() == null ) {            
+                $('#txtName').css('border-color', 'red');
+                isproceed = false;
+            }
+            else {
+                $('#txtName').css('border-color', '#ccc');              
+            }
+
+            if (txtPrice.val() == '' || txtPrice.val() == null || parseFloat(txtPrice.val()) <= 0) {
+                $('#txtPrice').css('border-color', 'red');
+                isproceed = false;
+            }  
+            else {
+                $('#txtPrice').css('border-color', '#ccc');            
+            }
+
+        if (txtQuantity.val() == '' ||  txtQuantity.val() == null || parseFloat(txtQuantity.val()) <= 0 ) {
+            $('#txtQuantity').css('border-color', 'red');
+            isproceed = false;
+            }    else {
+            $('#txtQuantity').css('border-color', '#ccc');   
+            }
+
+          
+
+            if (!isproceed){
+                tablevalidation.html("please check the items, And put the true values");
+            }
+            // Add A new Row
+            if (isproceed){
+            var price = parseFloat(txtPrice.val());
+            var quantity = parseFloat(txtQuantity.val());
+                
+
+                totalAmount.val(parseFloat((totalAmount.val() * 1.0) + (price * quantity * 1.0)).toFixed(2));  
+                tablevalidation.html("");
+                //Get the reference of the Table's TBODY element.
+                var tBody = $("#tblITems > TBODY")[0];
+
+                //Add Row.
+                var row = tBody.insertRow(-1); 
+
+                //Add Name cell.
+                var cell = $(row.insertCell(-1));
+                cell.html(txtName.val());
+
+                //Add Price cell.
+                cell = $(row.insertCell(-1));
+                cell.html(txtPrice.val());
+
+                //Add Quantity cell.
+                cell = $(row.insertCell(-1));
+                cell.html(txtQuantity.val());
+
+                //Add Button cell.
+                cell = $(row.insertCell(-1));
+                var btnRemove = $("<input />");
+                btnRemove.attr("type", "button");
+                btnRemove.attr("class", "btn btn-danger");
+                btnRemove.attr("onclick", "Remove(this);");
+                btnRemove.val("Remove");
+                cell.append(btnRemove);
+
+                //Clear the TextBoxes.
+                txtName.val("");
+                txtPrice.val("");
+                txtQuantity.val("");
+            }
+         
+        });
+
+        function Remove(button) {
+            //Determine the reference of the Row using the Button.
+            var row = $(button).closest("TR");
+            var name = $("TD", row).eq(0).html();
+            if (confirm("Do you want to delete: " + name)) {
+                //Get the reference of the Table.
+                var table = $("#tblITems")[0];
+                var price = parseFloat($("TD", row).eq(1).html());
+                var quantity = parseFloat($("TD", row).eq(2).html());
+                totalAmount.val(parseFloat((totalAmount.val() * 1.0) - (price * quantity * 1.0)).toFixed(2));
+               
+                table.deleteRow(row[0].rowIndex);
+            }
+        };
+
+        $("body").on("click", "#btnSave", function () {
+            //Loop through the Table rows and build a JSON array.
+            var Items = new Array();
+            $("#tblITems TBODY TR").each(function () {
+                var row = $(this);
+                var newItem = {};
+                newItem.Name = row.find("TD").eq(0).html();
+                newItem.Price = row.find("TD").eq(1).html();
+                newItem.Quantity = row.find("TD").eq(2).html();
+                Items.push(newItem);
+            });
+            // validation
+            var txtDate = $("#Date").val();
+            var txtCode = $("#Code").val();
+           var txtCustomerid = $("#customerid").val();
+            var isproceed = true;
+             
+            if (txtDate == '' || txtDate == null  ) {
+             
+                $('#Date').css('border-color', 'red');
+                isproceed = false;
+            } else {
+                $('#Date').css('border-color', '#ccc');
+            }
+
+            if (txtCode == '' || txtCode == null || parseFloat(txtCode) <= 0) {
+                $('#Code').css('border-color', 'red');
+                isproceed = false;
+                $("#Codevalidation").html("please Enter the code, and please choose a number more than Zero");
+               
+            } else {
+                $('#Date').css('border-color', '#ccc');
+            }
+
+            
+             if (txtCustomerid == '0') {
+                $('#customerid').css('border-color', 'red');
+                $("#Customervalidation").html("please Enter the Customer Name");
+                isproceed = false;
+            }
+            else{
+                $('#Code').css('border-color', '#ccc');
+            }
+
+       
+            // new invoice Data
+           var newinvoiceViewModel = {};
+            newinvoiceViewModel.Id = $("#Id").val();
+            newinvoiceViewModel.Date = txtDate;
+            newinvoiceViewModel.Code = txtCode;
+            newinvoiceViewModel.customerid = txtCustomerid;
+            newinvoiceViewModel.ItemViewModels = Items;
+            newinvoiceViewModel.Amount = totalAmount.val();
+            
+            //  validation for Itemstable if table  with zero rows throw error  
+            if (Items.length == 0) {         
+                isproceed = false;
+                tablevalidation.html("please write rows values");
+            }
+           // send the values of the Invoice data to the controller with Jqery Ajax 
+            if (isproceed)  
+            {
+                tablevalidation.html("");
+                $("#Customervalidation").html("");
+                $("#Codevalidation").html("");
+                $.support.cors = true;
+                $.ajax({
+                    type: "POST",
+                    url: "/Purchase/InvoiceAddOrEdit",
+                    data: {
+                        invoiceViewModel: newinvoiceViewModel
+                    },
+                    crossDomain: true,
+                    dataType: "json",
+                    async: true,
+                    success: function (data) {
+                        if(data){
+                            alert("success");
+                            window.location.href = "/Purchase/Index";
+                        }
+                        else{
+                            alert("faild, please choose another  Code This Code is taken ");
+                        }                       
+                     
+                    }, failure: function (response) {
+                        alert("faild, please choose another Code This Code is taken ");
+                      //  alert(response.responseText);
+                    },
+                    error: function (response) {
+                       // alert(response.responseText);
+                        alert("faild, please choose another Code This Code is taken ");
+                    }
+                });
+            }
+          
+            
+            
+        });
+    </script>
+    }
+ 
