@@ -29,7 +29,7 @@ namespace EcommerceProject.Controllers
             };
           // get all Invoices add apply Pagination and send data to the view 
             var items = await _unitOfWork.Repository<Invoice>().GetAllAsync();
-            int itemsCount= items.Count();
+            int itemsCount= items.Count;
             var Spec = new InvoiceWithCustomerSpecification(InvoiceSpecParams);
             var Invoices = await _unitOfWork.Repository<Invoice>().ListAsync(Spec);
             var Invoiceslist = _mapper.Map<IReadOnlyList<Invoice>, IReadOnlyList<InvoiceDto>>(Invoices);
